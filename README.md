@@ -34,10 +34,16 @@ python3 tools/verify_package.py
 
 ## Data and operational limits
 
-The radio packet is a fixed 32-byte payload: sequence, GPS latitude/longitude, temperature, humidity, pressure, flags and survivor ID. It does not contain battery, gas, respiration, indoor 3D position, altitude or satellite count. These are not fabricated in the UI. Sender-local experimental Wi-Fi CSI is not sent to the receiver.
+The radio packet is a fixed 32-byte payload: sequence, GPS latitude/longitude, temperature, humidity, pressure, flags and survivor ID. It does not contain battery, gas, respiration, indoor 3D position, altitude or satellite count. These are not fabricated in the UI. If an AHT20 or BMP280 reading is unavailable, the sender marks that individual reading invalid (NaN on the wire) and the receiver API exposes it as JSON null; do not interpret a missing value as zero. Sender-local experimental Wi-Fi CSI is not sent to the receiver.
 
 The tactical map is a local GPS coordinate plot with real received positions/trails and operator-entered HQ/checkpoints/teams. It is not an offline street map, surveyed terrain map, obstacle-aware route planner or radio coverage map. Search radius is an operator planning boundary. ETA is straight-line distance divided by the operator-entered team speed, plus preparation time and configured multiplier; it is not a safe-route, extraction-time or survival prediction.
 
 Team locations, assignments, incidents and settings are stored in the current browser. They are not transmitted to responder radios and do not synchronize across operators. Receiver packet/event history is held in RAM and resets on reboot. Confirm dispatch over the actual field communications channel.
 
 This is an experimental prototype, not a certified life-safety system. Validate the hardware, radio range, power, weather protection, GPS accuracy, browser behavior and field procedures before any real-world use. Do not rely on this device as the sole emergency communications or rescue system.
+
+## Quality and field validation
+
+- GitHub Actions runs package-integrity and dashboard JavaScript checks on pushes and pull requests: `.github/workflows/quality.yml`.
+- Follow `docs/FIELD_VALIDATION.md` for board-specific firmware builds, radio/GPS bench tests, range/interference tests, dashboard checks and supervised field-readiness sign-off.
+- A passing source workflow does not prove firmware compilation, radio performance, GPS accuracy or life-safety suitability.

@@ -708,9 +708,17 @@ void readSensors() {
   }
   lastSensorRead = millis();
   sensors_event_t humidityEvent{}, temperatureEvent{};
-  airHealthy = ahtOK && aht.getEvent(&humidityEvent, &temperatureEvent) &&
-               isfinite(temperatureEvent.temperature) && isfinite(humidityEvent.relative_humidity) &&
-               humidityEvent.relative_humidity >= 0 && humidityEvent.relative_humidity <= 100;
+  // Adafruit_AHTX0::getEvent() returns void; validate the populated readings
+  // rather than treating the call as a boolean expression.
+  if (ahtOK) {
+    aht.getEvent(&humidityEvent, &temperatureEvent);
+    airHealthy = isfinite(temperatureEvent.temperature) &&
+                 isfinite(humidityEvent.relative_humidity) &&
+                 humidityEvent.relative_humidity >= 0 &&
+                 humidityEvent.relative_humidity <= 100;
+  } else {
+    airHealthy = false;
+  }
   if (airHealthy) {
     temperature = temperatureEvent.temperature;
     humidity = humidityEvent.relative_humidity;
@@ -764,9 +772,12 @@ void preparePacket() {
   packet.sequence = ++packetCounter;
   packet.latitude = gpsValid ? latitude : 0;
   packet.longitude = gpsValid ? longitude : 0;
-  packet.temperature = temperature;
-  packet.humidity = humidity;
-  packet.pressure = pressure;
+  // Use IEEE-754 NaN for unavailable individual sensors. The receiver JSON
+  // serializer converts non-finite readings to null instead of displaying
+  // stale or fabricated zero values.
+  packet.temperature = airHealthy ? temperature : NAN;
+  packet.humidity = airHealthy ? humidity : NAN;
+  packet.pressure = pressureHealthy ? pressure : NAN;
   packet.flags = 0;
   if (gpsValid) {
     packet.flags |= FLAG_GPS_VALID;

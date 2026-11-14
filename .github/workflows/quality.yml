@@ -1,0 +1,78 @@
+name: Project quality checks
+
+on:
+  push:
+    branches: [main, colossus-4-quality-gates]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-validation:
+    name: Source package and dashboard validation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify embedded dashboard is synchronized
+        run: python3 tools/build_dashboard.py --check
+
+      - name: Verify package and dashboard JavaScript
+        run: python3 tools/verify_package.py
+
+  arduino-firmware-build:
+    name: Compile ESP32-S3 sender and classic ESP32 receiver
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install Espressif ESP32 core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.0.7
+
+      - name: Install firmware libraries
+        run: |
+          arduino-cli lib update-index
+          arduino-cli lib install RF24
+          arduino-cli lib install TinyGPSPlus
+          mkdir -p "$HOME/Arduino/libraries"
+          # Pin Adafruit libraries to their canonical upstream repositories.
+          # Arduino Library Manager package slugs are not the same as repo names.
+          git clone --depth 1 https://github.com/adafruit/Adafruit_BusIO.git "$HOME/Arduino/libraries/Adafruit_BusIO"
+          git clone --depth 1 https://github.com/adafruit/Adafruit_Sensor.git "$HOME/Arduino/libraries/Adafruit_Unified_Sensor"
+          git clone --depth 1 https://github.com/adafruit/Adafruit_AHTX0.git "$HOME/Arduino/libraries/Adafruit_AHTX0"
+          git clone --depth 1 https://github.com/adafruit/Adafruit_BMP280_Library.git "$HOME/Arduino/libraries/Adafruit_BMP280_Library"
+          git clone --depth 1 https://github.com/adafruit/Adafruit-GFX-Library.git "$HOME/Arduino/libraries/Adafruit-GFX-Library"
+          git clone --depth 1 https://github.com/adafruit/Adafruit_SSD1306.git "$HOME/Arduino/libraries/Adafruit_SSD1306"
+          git clone --depth 1 https://github.com/adafruit/Adafruit_NeoPixel.git "$HOME/Arduino/libraries/Adafruit_NeoPixel"
+
+      - name: Compile ESP32-S3 sender
+        run: |
+          arduino-cli compile --fqbn esp32:esp32:esp32s3 --warnings all firmware/RA_MAYDAY_Sender
+
+      - name: Compile classic ESP32 receiver
+        run: |
+          arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all firmware/RA_MAYDAY_Offline
