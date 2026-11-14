@@ -17,10 +17,10 @@ concurrency:
 jobs:
   source-validation:
     name: Source package and dashboard validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -58,7 +58,7 @@ jobs:
           arduino-cli lib update-index
           arduino-cli lib install RF24
           arduino-cli lib install TinyGPSPlus
-          arduino-cli lib install Adafruit_AHTX0
+          arduino-cli lib install "Adafruit AHTX0"
           arduino-cli lib install Adafruit_BMP280_Library
           arduino-cli lib install Adafruit_GFX_Library
           arduino-cli lib install Adafruit_SSD1306
