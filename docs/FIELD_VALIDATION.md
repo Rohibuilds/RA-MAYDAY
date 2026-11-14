@@ -26,8 +26,10 @@ GitHub Actions run is **not** evidence that the radio link or rescue workflow is
 - [ ] Confirm no build warnings were silently ignored; review memory usage and partition limits.
 - [ ] Confirm Dashboard.h and CommandBackground.h are regenerated after web asset edits.
 
-The automated workflow checks package integrity and dashboard JavaScript syntax. It does
-not compile Arduino firmware or emulate the radio hardware.
+The automated workflow checks package integrity, dashboard JavaScript syntax, and compiles
+both configured Arduino targets (ESP32-S3 sender and classic ESP32 receiver) using the
+workflow's configured ESP32 core and installed libraries. CI compilation does not prove that
+the exact physical boards, wiring, radio link, sensors, GPS or field workflow operate correctly.
 
 ## 3. Bench test: radio and telemetry
 
