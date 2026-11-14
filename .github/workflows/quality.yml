@@ -37,3 +37,37 @@ jobs:
 
       - name: Verify package and dashboard JavaScript
         run: python3 tools/verify_package.py
+
+  arduino-firmware-build:
+    name: Compile ESP32-S3 sender and classic ESP32 receiver
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install Espressif ESP32 core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.0.7
+
+      - name: Install firmware libraries
+        run: |
+          arduino-cli lib update-index
+          arduino-cli lib install RF24
+          arduino-cli lib install TinyGPSPlus
+          arduino-cli lib install Adafruit_AHTX0
+          arduino-cli lib install Adafruit_BMP280_Library
+          arduino-cli lib install Adafruit_GFX_Library
+          arduino-cli lib install Adafruit_SSD1306
+          arduino-cli lib install Adafruit_NeoPixel
+
+      - name: Compile ESP32-S3 sender
+        run: |
+          arduino-cli compile --fqbn esp32:esp32:esp32s3 --warnings all firmware/RA_MAYDAY_Sender
+
+      - name: Compile classic ESP32 receiver
+        run: |
+          arduino-cli compile --fqbn esp32:esp32:esp32 --warnings all firmware/RA_MAYDAY_Offline
