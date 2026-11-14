@@ -40,10 +40,10 @@ jobs:
 
   arduino-firmware-build:
     name: Compile ESP32-S3 sender and classic ESP32 receiver
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -58,7 +58,9 @@ jobs:
           arduino-cli lib update-index
           arduino-cli lib install RF24
           arduino-cli lib install TinyGPSPlus
-          arduino-cli lib install "Adafruit AHTX0"
+          arduino-cli lib install "Adafruit BusIO"
+          mkdir -p "$HOME/Arduino/libraries"
+          git clone --depth 1 https://github.com/adafruit/Adafruit_AHTX0.git "$HOME/Arduino/libraries/Adafruit_AHTX0"
           arduino-cli lib install Adafruit_BMP280_Library
           arduino-cli lib install Adafruit_GFX_Library
           arduino-cli lib install Adafruit_SSD1306
