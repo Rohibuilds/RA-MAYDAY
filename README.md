@@ -34,7 +34,7 @@ python3 tools/verify_package.py
 
 ## Data and operational limits
 
-The radio packet is a fixed 32-byte payload: sequence, GPS latitude/longitude, temperature, humidity, pressure, flags and survivor ID. It does not contain battery, gas, respiration, indoor 3D position, altitude or satellite count. These are not fabricated in the UI. Sender-local experimental Wi-Fi CSI is not sent to the receiver.
+The radio packet is a fixed 32-byte payload: sequence, GPS latitude/longitude, temperature, humidity, pressure, flags and survivor ID. It does not contain battery, gas, respiration, indoor 3D position, altitude or satellite count. These are not fabricated in the UI. If an AHT20 or BMP280 reading is unavailable, the sender marks that individual reading invalid (NaN on the wire) and the receiver API exposes it as JSON null; do not interpret a missing value as zero. Sender-local experimental Wi-Fi CSI is not sent to the receiver.
 
 The tactical map is a local GPS coordinate plot with real received positions/trails and operator-entered HQ/checkpoints/teams. It is not an offline street map, surveyed terrain map, obstacle-aware route planner or radio coverage map. Search radius is an operator planning boundary. ETA is straight-line distance divided by the operator-entered team speed, plus preparation time and configured multiplier; it is not a safe-route, extraction-time or survival prediction.
 
