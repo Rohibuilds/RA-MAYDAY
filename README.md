@@ -1,92 +1,74 @@
 # RA MAYDAY · COLOSSUS 3.0
 
-Offline field telemetry and rescue coordination built around an ESP32-S3 sender,
-nRF24L01+ radio link, and a classic ESP32 receiver hosting its own tactical dashboard.
+Offline rescue-operations prototype for an ESP32-S3 survivor sender and a classic ESP32
+receiver. The receiver hosts its command dashboard over its own Wi-Fi access point.
 
-**Status:** working source package with host-side logic tests. The current complete
-firmware has not been compiled or tested on physical boards in this environment.
-Earlier sender logs reported successful radio transmissions; they do not validate
-all subsequent firmware changes. This is an experimental prototype.
+## Repository publication status
 
-## Start here
+This repository currently contains the receiver firmware entry point, command background
+asset, setup guide and build/verification utilities. The complete source package supplied
+separately also contains the sender sketch, editable dashboard HTML and embedded headers;
+those larger files are **not yet committed here**. Do not treat this repository checkout
+as a complete build until those source files are added.
 
-1. Install **esp32 by Espressif Systems** in Arduino IDE Boards Manager.
-2. Install the libraries listed in [dependencies](docs/dependencies.md).
-3. Upload `firmware/RA_MAYDAY_Sender/RA_MAYDAY_Sender.ino` to the **ESP32-S3 sender**,
-   or retain your matching existing sender firmware.
-4. Upload `firmware/RA_MAYDAY_Offline/RA_MAYDAY_Offline.ino` to the **classic ESP32 receiver**.
-   Keep its `.h` files in the same sketch folder.
-5. Join receiver Wi-Fi **RA-MAYDAY**, example password **Mayday2026**.
-6. Open **http://192.168.4.1/**. No internet or Raspberry Pi is required.
+## Files currently published
 
-Change example hotspot passwords before sharing the hardware. The sender's separate
-hotspot is **RA-MAYDAY-SURVIVOR**, example password **MAYDAY2026**.
+- `firmware/RA_MAYDAY_Offline/RA_MAYDAY_Offline.ino` — classic ESP32 receiver.
+- `web/receiver/command-grid.svg` — graphite/amber command-console background.
+- `docs/START_HERE.md` — receiver wiring, upload and operating guide.
+- `tools/build_dashboard.py` — regenerates embedded HTML/SVG headers from editable web assets.
+- `tools/verify_package.py` — portable source integrity checks.
 
-See [wiring](docs/wiring.md) and [full receiver guide](docs/receiver-setup.md).
+## Planned complete package structure
 
-## Features
-
-- Sender GPS, AHT20/BMP280 telemetry, SOS button, OLED and WS2812 status.
-- Sender-local experimental Wi-Fi CSI view (not transported in the radio packet).
-- Receiver tactical map, real received GPS trails, search area, HQ and checkpoints.
-- Eight survivor display slots, selected telemetry, SOS history and stale reporting.
-- Manual team assignments, priorities, incident notes and mission progress.
-- Travel planning estimates from entered team positions/speeds, not rescue predictions.
-- Browser-local settings and operational backup/restore, CSV/GeoJSON/map export.
-- Green/red receiver status LEDs on GPIO 32/33.
-
-## Repository layout
-
-| Directory | Purpose |
-|---|---|
-| `firmware/RA_MAYDAY_Sender` | ESP32-S3 field sender, with embedded sender interface |
-| `firmware/RA_MAYDAY_Offline` | Classic ESP32 receiver, embedded tactical dashboard, LEDs |
-| `web/receiver` | Editable receiver HTML and vector background |
-| `tools/embed_dashboard.py` | Rebuild receiver headers from website source |
-| `tests` | Host-side UI, packet-buffer and LED logic checks |
-| `docs` | Wiring, setup, dependencies and limitations |
-| `optional/aws` | Earlier optional Lambda/DynamoDB cloud variant; not required offline |
-
-After editing the receiver website, run `python3 tools/embed_dashboard.py` before
-uploading the receiver sketch. GitHub stores source: GitHub Pages alone cannot receive
-these radio packets. The operational offline site is served by the receiver ESP32.
-
-## Local verification
-
-From this directory (Python 3, Node.js 18+ and a C++17 compiler):
-
-```bash
-python3 tools/embed_dashboard.py --check
-node tests/dashboard.cjs
-python3 tests/packet_led.py
-python3 tests/cloud_api.py
+```text
+firmware/
+  RA_MAYDAY_Sender/RA_MAYDAY_Sender.ino
+  RA_MAYDAY_Offline/
+    RA_MAYDAY_Offline.ino
+    Dashboard.h
+    CommandBackground.h
+web/receiver/
+  dashboard.html
+  command-grid.svg
+docs/START_HERE.md
+tools/
+  build_dashboard.py
+  verify_package.py
 ```
 
-These tests use a simulated DOM, mocked cloud storage and host C++ logic. They do not
-replace an Arduino board build, RF link test, browser visual check or field validation.
+## Receiver architecture
 
-## Data limits
+The receiver uses an nRF24L01+ link on channel 76, 250 kbps, pipe `MAY01`, CRC16,
+automatic ACK and a fixed 32-byte packet. The packet contains sequence, GPS coordinates,
+temperature, humidity, pressure, flags and survivor ID.
 
-Radio payload: 32 bytes, pipe `MAY01`, channel 76, 250 kbps, CRC16, automatic ACK.
-Temperature/humidity/pressure, sequence, ID, GPS coordinates and three flags are sent.
-Battery, gas, breathing, indoor 3D position, altitude and satellite count are not in
-this packet. No unsupported readings are fabricated.
+Receiver hotspot defaults are `RA-MAYDAY` / `Mayday2026`; open
+`http://192.168.4.1/`. Change the example password before field use.
 
-Team positions/assignments are operator-entered, browser-local and not transmitted to
-responder devices. Receiver telemetry/event history is in RAM and resets on reboot.
-Map search circles are planning boundaries, not RF detection range. No street tiles,
-obstacle routing or certified life-safety capability is included.
+## Dashboard capabilities in the supplied source package
 
-## Cloud variant
+Eight survivor display slots, received GPS positions and trails, SOS event history,
+stale-data detection, temperature/humidity/pressure trends, packet search and CSV export,
+HQ/search-radius planning, checkpoints, GeoJSON/map-image export, team creation and
+assignment, priority and mission-state tracking, operator notes/log, direct distance and
+bearing, planning ETA, incident desk, optional audible SOS alert, receiver diagnostics,
+settings, backup/restore, print and fullscreen controls.
 
-The optional AWS files are an alternative deployment, not part of the offline setup.
-Copy `CloudConfig.example.h` to `CloudConfig.h` beside that optional receiver sketch,
-then configure it locally. The real header, tokens and deployment state are ignored.
-AWS resources can incur charges. No AWS deployment has been verified in this project.
+The dashboard uses a local coordinate plot, not offline street tiles or obstacle-aware
+routing. Team locations and assignments are operator-entered, browser-local and are not
+transmitted to responder radios. ETA is a planning estimate, not a rescue prediction.
+The 32-byte radio packet does not include breathing, battery, gas, altitude, satellite
+count or indoor 3D position; no unsupported readings are fabricated.
 
-## Attribution and distribution
+## Build notes
 
-Firmware uses Arduino/ESP32 and third-party libraries under their respective licenses.
-The source package has no project-wide open-source license selected yet; publishing
-it does not automatically grant reuse rights. Image assets were generated for this
-project; the receiver background is an original SVG included in the source tree.
+After the editable dashboard HTML and embedded headers are committed, run:
+
+```bash
+python3 tools/build_dashboard.py
+python3 tools/verify_package.py
+```
+
+These checks do not replace an Arduino board build, physical RF test, browser visual check
+or field validation. This is an experimental prototype, not a certified life-safety system.
