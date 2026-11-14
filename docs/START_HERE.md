@@ -22,6 +22,34 @@ Keep power off while checking connections. These pins avoid GPIO 4, 5, 18 and 34
 The receiver ACK transmitter is configured at RF24_PA_HIGH to improve the return link. For a very-close bench test, RF24_PA_LOW may reduce overload. The sender currently uses RF24_PA_MAX; only retain that setting with a stable supply and appropriate antenna/module installation. Do not assume advertised range: measure reliable packet delivery in the actual environment.
 No receiver-to-Pi UART wires are needed. Receiver sensor readings come from the sender.
 
+
+## 1A. Sender wiring — ESP32-S3 + NEO-6M
+
+This is the sender pin map from the current firmware. Confirm the labels against your exact ESP32-S3 development board before wiring; board variants can route or reserve pins differently.
+
+| Sender device pin | ESP32-S3 GPIO / connection |
+|---|---|
+| NEO-6M TX | GPIO 16 (ESP32-S3 GPS RX) |
+| NEO-6M RX | GPIO 17 (ESP32-S3 GPS TX) |
+| NEO-6M GND | GND |
+| NEO-6M VCC | Supply allowed by your exact GPS breakout board |
+| AHT20 SDA / BMP280 SDA / OLED SDA | GPIO 8 (shared I²C bus) |
+| AHT20 SCL / BMP280 SCL / OLED SCL | GPIO 9 (shared I²C bus) |
+| nRF24 CE | GPIO 4 |
+| nRF24 CSN | GPIO 5 |
+| nRF24 SCK | GPIO 12 |
+| nRF24 MISO | GPIO 13 |
+| nRF24 MOSI | GPIO 11 |
+| SOS push button | GPIO 7 to GND (internal pull-up) |
+| WS2812 data | GPIO 15 |
+| All grounds | Common GND |
+
+The sender's firmware uses UART1 at 9600 baud for the NEO-6M and I²C addresses 0x3C/0x3D for the OLED and 0x76/0x77 for the BMP280. AHT20, BMP280 and OLED share the same I²C bus; use compatible 3.3 V logic and check the breakout-board power requirements. Do not connect GPS TX to ESP TX: UART is crossed (GPS TX → ESP RX16, GPS RX ← ESP TX17).
+
+Power the PA+LNA nRF24 from a separate clean 3.3 V regulator sized to its peak current, not from an overloaded ESP32 3.3 V pin. Keep the radio supply ground common with the ESP32 ground. Place 10–47 µF low-ESR bulk capacitance and 100 nF ceramic decoupling at the radio module. Never apply 5 V to nRF24 VCC or its logic pins. Verify the exact GPS breakout's VCC tolerance separately; do not assume all NEO-6M boards accept the same input voltage.
+
+For the first bench test, use short SPI wires and keep the two radios a few metres apart rather than directly next to one another. Verify stable power before changing radio power settings.
+
 ## 2. Open and upload
 
 1. Extract this ZIP.
