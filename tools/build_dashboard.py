@@ -10,7 +10,7 @@ OUT_HTML = ROOT / "firmware/RA_MAYDAY_Offline/Dashboard.h"
 OUT_SVG = ROOT / "firmware/RA_MAYDAY_Offline/CommandBackground.h"
 
 
-def render(source: str, symbol: str, delimiter: str) -> str:
+def render(source: str, symbol: str, delimiter: str, comment: str) -> str:
     if f"){delimiter}\"" in source:
         raise SystemExit(f"Raw-string delimiter collision: {delimiter}")
     return ("#pragma once\n#include <Arduino.h>\n"
@@ -22,8 +22,8 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="fail if embedded headers are out of date")
     args = parser.parse_args()
     expected = {
-        OUT_HTML: render(HTML.read_text(encoding="utf-8"), "DASHBOARD_HTML", "MAYDAY"),
-        OUT_SVG: render(SVG.read_text(encoding="utf-8"), "COMMAND_BACKGROUND", "ART"),
+        OUT_HTML: render(HTML.read_text(encoding="utf-8"), "DASHBOARD_HTML", "MAYDAY", "HTML"),
+        OUT_SVG: render(SVG.read_text(encoding="utf-8"), "COMMAND_BACKGROUND", "ART", "SVG"),
     }
     stale = []
     for path, content in expected.items():
