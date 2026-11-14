@@ -50,7 +50,10 @@ WebServer server(80);
 uint64_t uptimeMs(){return (uint64_t)esp_timer_get_time()/1000ULL;}
 bool initializeRadio(){
   if(!radio.begin(&SPI)||!radio.isChipConnected()) return false;
-  radio.setPALevel(RF24_PA_LOW);
+  // The PA+LNA receiver must send ACKs back across the same field link.
+  // HIGH is a conservative default; use LOW for very-close bench tests.
+  // A clean, adequately rated 3.3 V supply is mandatory for PA/LNA modules.
+  radio.setPALevel(RF24_PA_HIGH);
   radio.setChannel(RADIO_CHANNEL);
   if(!radio.setDataRate(RF24_250KBPS)) return false;
   radio.setAddressWidth(5); radio.setCRCLength(RF24_CRC_16);
