@@ -41,3 +41,9 @@ The tactical map is a local GPS coordinate plot with real received positions/tra
 Team locations, assignments, incidents and settings are stored in the current browser. They are not transmitted to responder radios and do not synchronize across operators. Receiver packet/event history is held in RAM and resets on reboot. Confirm dispatch over the actual field communications channel.
 
 This is an experimental prototype, not a certified life-safety system. Validate the hardware, radio range, power, weather protection, GPS accuracy, browser behavior and field procedures before any real-world use. Do not rely on this device as the sole emergency communications or rescue system.
+
+## Quality and field validation
+
+- GitHub Actions runs package-integrity and dashboard JavaScript checks on pushes and pull requests: `.github/workflows/quality.yml`.
+- Follow `docs/FIELD_VALIDATION.md` for board-specific firmware builds, radio/GPS bench tests, range/interference tests, dashboard checks and supervised field-readiness sign-off.
+- A passing source workflow does not prove firmware compilation, radio performance, GPS accuracy or life-safety suitability.
