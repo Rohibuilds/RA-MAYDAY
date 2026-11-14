@@ -17,8 +17,9 @@ Keep power off while checking connections. These pins avoid GPIO 4, 5, 18 and 34
 | VCC | Stable 3.3 V |
 | GND | GND |
 
-Keep the existing correctly wired nRF24 supply and nearby decoupling capacitor.
-Do not connect the nRF24 directly to 5 V. PA/LNA modules may need a dedicated regulator.
+**PA+LNA power is critical:** do not assume the ESP32 3.3 V pin can supply the radio's transmit-current peaks. Use a clean, regulated 3.3 V supply sized for the module's peak current (follow the module vendor's rating), connect grounds together, and place a 10–47 µF low-ESR capacitor plus a 100 nF ceramic capacitor close to the radio VCC/GND pins. Keep SPI wires short. Never connect nRF24 VCC to 5 V.
+
+The receiver ACK transmitter is configured at RF24_PA_HIGH to improve the return link. For a very-close bench test, RF24_PA_LOW may reduce overload. The sender currently uses RF24_PA_MAX; only retain that setting with a stable supply and appropriate antenna/module installation. Do not assume advertised range: measure reliable packet delivery in the actual environment.
 No receiver-to-Pi UART wires are needed. Receiver sensor readings come from the sender.
 
 ## 2. Open and upload
